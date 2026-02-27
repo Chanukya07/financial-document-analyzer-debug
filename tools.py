@@ -3,42 +3,50 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from crewai_tools import tools
-from crewai_tools.tools.serper_dev_tool import SerperDevTool
+from crewai.tools import tool
+from crewai_tools import SerperDevTool
+from langchain_community.document_loaders import PyPDFLoader
 
 ## Creating search tool
 search_tool = SerperDevTool()
 
 ## Creating custom pdf reader tool
 class FinancialDocumentTool():
-    async def read_data_tool(path='data/sample.pdf'):
+
+    @tool("Read Data Tool")
+    def read_data_tool(path: str):
         """Tool to read data from a pdf file from a path
 
         Args:
-            path (str, optional): Path of the pdf file. Defaults to 'data/sample.pdf'.
+            path (str): Path of the pdf file.
 
         Returns:
             str: Full Financial Document file
         """
-        
-        docs = Pdf(file_path=path).load()
-
-        full_report = ""
-        for data in docs:
-            # Clean and format the financial document data
-            content = data.page_content
+        try:
+            loader = PyPDFLoader(path)
+            docs = loader.load()
             
-            # Remove extra whitespaces and format properly
-            while "\n\n" in content:
-                content = content.replace("\n\n", "\n")
+            full_report = ""
+            for data in docs:
+                # Clean and format the financial document data
+                content = data.page_content
                 
-            full_report += content + "\n"
-            
-        return full_report
+                # Remove extra whitespaces and format properly
+                while "\n\n" in content:
+                    content = content.replace("\n\n", "\n")
+
+                full_report += content + "\n"
+
+            return full_report
+        except Exception as e:
+            return f"Error reading PDF file: {str(e)}"
 
 ## Creating Investment Analysis Tool
 class InvestmentTool:
-    async def analyze_investment_tool(financial_document_data):
+    @tool("Analyze Investment Tool")
+    def analyze_investment_tool(financial_document_data):
+        """Tool to analyze investment opportunities from financial data"""
         # Process and analyze the financial document data
         processed_data = financial_document_data
         
@@ -55,6 +63,8 @@ class InvestmentTool:
 
 ## Creating Risk Assessment Tool
 class RiskTool:
-    async def create_risk_assessment_tool(financial_document_data):        
+    @tool("Create Risk Assessment Tool")
+    def create_risk_assessment_tool(financial_document_data):
+        """Tool to assess risks from financial data"""
         # TODO: Implement risk assessment logic here
         return "Risk assessment functionality to be implemented"

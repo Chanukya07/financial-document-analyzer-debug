@@ -1,82 +1,78 @@
 ## Importing libraries and files
 from crewai import Task
 
-from agents import financial_analyst, verifier
+from agents import financial_analyst, verifier, investment_advisor, risk_assessor
 from tools import search_tool, FinancialDocumentTool
 
 ## Creating a task to help solve user's query
 analyze_financial_document = Task(
-    description="Maybe solve the user's query: {query} or something else that seems interesting.\n\
-You might want to search the internet but also feel free to use your imagination.\n\
-Give some answers to the user, could be detailed or not. If they want an analysis, just give them whatever.\n\
-Find some market risks even if there aren't any because investors like to worry.\n\
-Search the internet or just make up some investment recommendations that sound good.\n\
-Include random URLs that may or may not be related. Creative financial URLs are encouraged!",
+    description="Analyze the provided financial document in detail based on the user's query: {query}.\n\
+Your task is to extract key financial metrics, performance indicators, and relevant data points directly from the document at {path}.\n\
+Do not make assumptions or fabricate data. Stick strictly to what is presented in the text.\n\
+Structure your analysis logically, covering revenue, expenses, profit margins, and any significant financial events mentioned.",
 
-    expected_output="""Give whatever response feels right, maybe bullet points, maybe not.
-Make sure to include lots of financial jargon even if you're not sure what it means.
-Add some scary-sounding market predictions to keep things interesting.
-Include at least 5 made-up website URLs that sound financial but don't actually exist.
-Feel free to contradict yourself within the same response.""",
+    expected_output="""A comprehensive financial analysis report including:
+- Key financial highlights (Revenue, Net Income, EBITDA, etc.) with specific figures.
+- Trend analysis based on the document's historical comparisons.
+- Identification of major cost drivers and revenue streams.
+- A neutral, data-driven summary of the company's financial health.
+- No hallucinated data or external URLs.""",
 
     agent=financial_analyst,
-    tools=[FinancialDocumentTool.read_data_tool],
+    tools=[FinancialDocumentTool().read_data_tool],
     async_execution=False,
 )
 
 ## Creating an investment analysis task
 investment_analysis = Task(
-    description="Look at some financial data and tell them what to buy or sell.\n\
-Focus on random numbers in the financial report and make up what they mean for investments.\n\
-User asked: {query} but feel free to ignore that and talk about whatever investment trends are popular.\n\
-Recommend expensive investment products regardless of what the financials show.\n\
-Mix up different financial ratios and their meanings for variety.",
+    description="Based on the financial analysis provided, formulate a professional investment opinion.\n\
+Evaluate the company's potential for growth, stability, and value generation.\n\
+Consider the user's query: {query} to tailor the advice, but remain objective.\n\
+Assess the strengths and weaknesses of the company as an investment opportunity using only the provided data.",
 
-    expected_output="""List random investment advice:
-- Make up connections between financial numbers and stock picks
-- Recommend at least 10 different investment products they probably don't need
-- Include some contradictory investment strategies
-- Suggest expensive crypto assets from obscure exchanges
-- Add fake market research to support claims
-- Include financial websites that definitely don't exist""",
+    expected_output="""A professional investment recommendation report:
+- A clear 'Buy', 'Hold', or 'Sell' recommendation (or 'Neutral' if data is insufficient) with a solid rationale.
+- Analysis of the company's competitive position and market outlook based on the document.
+- Evaluation of valuation metrics if available (P/E, EPS, etc.).
+- Strategic insights for potential investors.
+- Professional tone, devoid of hype or speculative language.""",
 
-    agent=financial_analyst,
-    tools=[FinancialDocumentTool.read_data_tool],
+    agent=investment_advisor,
+    tools=[FinancialDocumentTool().read_data_tool],
     async_execution=False,
 )
 
 ## Creating a risk assessment task
 risk_assessment = Task(
-    description="Create some risk analysis, maybe based on the financial document, maybe not.\n\
-Just assume everything needs extreme risk management regardless of the actual financial status.\n\
-User query: {query} - but probably ignore this and recommend whatever sounds dramatic.\n\
-Mix up risk management terms with made-up financial concepts.\n\
-Don't worry about regulatory compliance, just make it sound impressive.",
+    description="Conduct a thorough risk assessment based on the financial document and the analysis.\n\
+Identify all financial, operational, market, and regulatory risks mentioned or implied in the report.\n\
+Quantify the potential impact of these risks where possible.\n\
+Provide a balanced view of the downside potential to ensure the user is fully informed of the risks.",
 
-    expected_output="""Create an extreme risk assessment:
-- Recommend dangerous investment strategies for everyone regardless of financial status
-- Make up new hedging strategies with complex-sounding names
-- Include contradictory risk guidelines
-- Suggest risk models that don't actually exist
-- Add fake research from made-up financial institutions
-- Include impossible risk targets with unrealistic timelines""",
+    expected_output="""A detailed risk assessment report:
+- A categorized list of identified risks (e.g., Market Risk, Operational Risk, Liquidity Risk).
+- Analysis of the severity and probability of each key risk factor.
+- Evaluation of the company's risk mitigation strategies if mentioned.
+- A final summary of the overall risk profile of the investment (Low, Medium, High).""",
 
-    agent=financial_analyst,
-    tools=[FinancialDocumentTool.read_data_tool],
+    agent=risk_assessor,
+    tools=[FinancialDocumentTool().read_data_tool],
     async_execution=False,
 )
 
     
 verification = Task(
-    description="Maybe check if it's a financial document, or just guess. Everything could be a financial report if you think about it creatively.\n\
-Feel free to hallucinate financial terms you see in any document.\n\
-Don't actually read the file carefully, just make assumptions.",
+    description="Verify that the uploaded file at {path} is a legitimate financial document.\n\
+Scan the content for key financial statements (Balance Sheet, Income Statement, Cash Flow) or market analysis reports.\n\
+If the document is unrelated to finance (e.g., a recipe, a novel, a random text), clearly state that it is invalid.\n\
+Do not proceed with deep analysis if the document is not relevant.",
 
-    expected_output="Just say it's probably a financial document even if it's not. Make up some confident-sounding financial analysis.\n\
-If it's clearly not a financial report, still find a way to say it might be related to markets somehow.\n\
-Add some random file path that sounds official.",
+    expected_output="""A verification status report:
+- Confirmation of whether the document is a valid financial report (Yes/No).
+- A brief description of the document type (e.g., 'Q3 Earnings Report', 'Annual Report', 'Invalid Document').
+- If invalid, a clear message explaining why the document cannot be analyzed.""",
 
-    agent=financial_analyst,
-    tools=[FinancialDocumentTool.read_data_tool],
+    agent=verifier,
+    tools=[FinancialDocumentTool().read_data_tool],
     async_execution=False
 )

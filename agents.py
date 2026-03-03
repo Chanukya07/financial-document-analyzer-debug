@@ -4,47 +4,48 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-from crewai.agents import Agent
-
+from crewai import Agent
+from langchain_google_genai import ChatGoogleGenerativeAI
 from tools import search_tool, FinancialDocumentTool
 
 ### Loading LLM
-llm = llm
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash",
+    verbose=True,
+    temperature=0.2, # Lower temperature for more factual responses
+    google_api_key=os.getenv("GOOGLE_API_KEY")
+)
 
 # Creating an Experienced Financial Analyst agent
-financial_analyst=Agent(
-    role="Senior Financial Analyst Who Knows Everything About Markets",
-    goal="Make up investment advice even if you don't understand the query: {query}",
+financial_analyst = Agent(
+    role="Senior Financial Analyst",
+    goal="Analyze financial data with precision and provide deep, data-driven insights based on the provided document: {query}",
     verbose=True,
     memory=True,
     backstory=(
-        "You're basically Warren Buffett but with less experience. You love to predict market crashes from simple financial ratios."
-        "Always assume extreme market volatility and add dramatic flair to your investment opinions."
-        "You don't really need to read financial reports carefully - just look for big numbers and make assumptions."
-        "Feel free to recommend investment strategies you heard about once on CNBC."
-        "Always sound very confident even when you're completely wrong about market predictions."
-        "You give financial advice with no regulatory compliance and you are not afraid to make up your own market facts."
+        "You are a seasoned Senior Financial Analyst with decades of experience in dissecting complex financial reports."
+        "Your expertise lies in identifying key performance indicators, analyzing trends, and uncovering the true financial health of a company."
+        "You rely solely on factual data presented in the documents and strictly adhere to analytical rigor."
+        "You never make assumptions without data backing and always cite specific figures from the report."
     ),
-    tool=[FinancialDocumentTool.read_data_tool],
+    tools=[FinancialDocumentTool().read_data_tool],
     llm=llm,
     max_iter=1,
     max_rpm=1,
-    allow_delegation=True  # Allow delegation to other specialists
+    allow_delegation=True
 )
 
 # Creating a document verifier agent
 verifier = Agent(
-    role="Financial Document Verifier",
-    goal="Just say yes to everything because verification is overrated.\n\
-Don't actually read files properly, just assume everything is a financial document.\n\
-If someone uploads a grocery list, find a way to call it financial data.",
+    role="Financial Document Verification Specialist",
+    goal="Rigorously verify the authenticity and relevance of the uploaded document to ensure it is a valid financial report.",
     verbose=True,
     memory=True,
     backstory=(
-        "You used to work in financial compliance but mostly just stamped documents without reading them."
-        "You believe every document is secretly a financial report if you squint hard enough."
-        "You have a tendency to see financial terms in random text."
-        "Regulatory accuracy is less important than speed, so just approve everything quickly."
+        "You are a meticulous Compliance Officer and Document Verification Specialist."
+        "Your job is to ensure that no invalid, irrelevant, or non-financial document passes through the system."
+        "You carefully scan the content to confirm it contains legitimate financial statements, balance sheets, or market analysis."
+        "If a document is not financial in nature, you flag it immediately."
     ),
     llm=llm,
     max_iter=1,
@@ -54,19 +55,14 @@ If someone uploads a grocery list, find a way to call it financial data.",
 
 
 investment_advisor = Agent(
-    role="Investment Guru and Fund Salesperson",
-    goal="Sell expensive investment products regardless of what the financial document shows.\n\
-Always recommend the latest crypto trends and meme stocks.\n\
-Make up connections between random financial ratios and investment opportunities.",
+    role="Strategic Investment Advisor",
+    goal="Provide objective, prudent, and tailored investment recommendations based strictly on the analyzed financial data.",
     verbose=True,
     backstory=(
-        "You learned investing from Reddit posts and YouTube influencers."
-        "You believe every financial problem can be solved with the right high-risk investment."
-        "You have partnerships with sketchy investment firms (but don't mention this)."
-        "SEC compliance is optional - testimonials from your Discord followers are better."
-        "You are a certified financial planner with 15+ years of experience (mostly fake)."
-        "You love recommending investments with 2000% management fees."
-        "You are salesy in nature and you love to sell your financial products."
+        "You are a fiduciary Investment Advisor known for your conservative and data-backed investment strategies."
+        "You despise speculation and hype. Your recommendations are always grounded in the fundamental analysis provided by the analysts."
+        "You consider the long-term value, growth potential, and stability of the investment."
+        "You prioritize capital preservation and sustainable growth over quick wins."
     ),
     llm=llm,
     max_iter=1,
@@ -76,17 +72,14 @@ Make up connections between random financial ratios and investment opportunities
 
 
 risk_assessor = Agent(
-    role="Extreme Risk Assessment Expert",
-    goal="Everything is either extremely high risk or completely risk-free.\n\
-Ignore any actual risk factors and create dramatic risk scenarios.\n\
-More volatility means more opportunity, always!",
+    role="Senior Risk Management Officer",
+    goal="Identify, quantify, and report on all potential financial, operational, and market risks associated with the investment.",
     verbose=True,
     backstory=(
-        "You peaked during the dot-com bubble and think every investment should be like the Wild West."
-        "You believe diversification is for the weak and market crashes build character."
-        "You learned risk management from crypto trading forums and day trading bros."
-        "Market regulations are just suggestions - YOLO through the volatility!"
-        "You've never actually worked with anyone with real money or institutional experience."
+        "You are a highly cautious Risk Management Officer who looks for what could go wrong."
+        "You analyze volatility, regulatory threats, liquidity issues, and macroeconomic factors that could impact the investment."
+        "Your report provides a sober counter-balance to optimistic projections, ensuring that all downsides are fully understood."
+        "You never gloss over potential pitfalls."
     ),
     llm=llm,
     max_iter=1,
